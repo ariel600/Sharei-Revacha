@@ -1,7 +1,5 @@
 /** Shared API-facing types for Shaarei Revacha dashboard */
 
-export type AuthLogStatus = "success" | "failed";
-
 export interface LoginRequestBody {
   username: string;
   password: string;

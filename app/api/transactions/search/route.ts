@@ -1,6 +1,6 @@
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
-import { buildDatesQueryParam, lastNDaysRange } from "@/lib/dates";
+import { buildDatesQueryParamT05, lastNDaysRange } from "@/lib/dates";
 import { EXTERNAL_API_BASE, EXTERNAL_PATHS } from "@/lib/external-api";
 import {
   normalizeTransactionList,
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   const amount = req.nextUrl.searchParams.get("amount");
 
   const { start, end } = lastNDaysRange(30);
-  const dates = buildDatesQueryParam(start, end);
+  const dates = buildDatesQueryParamT05(start, end);
 
   const url = new URL(`${EXTERNAL_API_BASE}${EXTERNAL_PATHS.transactions}`);
   url.searchParams.set("dates", dates);

@@ -2,7 +2,13 @@
 
 import { apiClient } from "@/lib/api-client";
 import { applyLocalTransactionFilter } from "@/lib/transaction-helpers";
-import { buildDatesQueryParam } from "@/lib/dates";
+import {
+  buildDatesQueryParamT05,
+  parseDateInput,
+  toDateInputValue,
+} from "@/lib/dates";
+import { branchKey, findYermiyahuBranchId } from "@/lib/branch-helpers";
+import { stationKey, stationLabel } from "@/lib/station-helpers";
 import { normalizeApiArray } from "@/lib/normalize-api-array";
 import { TransactionTable } from "@/components/transaction-table";
 import type { Branch, Station, Transaction } from "@/types/shaarei";
@@ -10,20 +16,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Loader2, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
-function toDatetimeLocalValue(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function parseDatetimeLocal(s: string): Date {
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? new Date() : d;
-}
-
-function branchKey(b: Branch): string {
-  return String(b.id ?? b._id ?? b.branchId ?? b.code ?? "");
-}
 
 function branchLabel(b: Branch, fallback: string): string {
   return String((b.name ?? b.title ?? b.code ?? branchKey(b)) || fallback);
@@ -33,6 +25,7 @@ export default function OverviewPage() {
   const { t } = useTranslation();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [branchId, setBranchId] = useState<string>("");
+  const [stationId, setStationId] = useState<string>("");
   const [stations, setStations] = useState<Station[]>([]);
   const [loadingBranches, setLoadingBranches] = useState(true);
 
@@ -43,8 +36,8 @@ export default function OverviewPage() {
     return { start, end };
   }, []);
 
-  const [rangeStart, setRangeStart] = useState(() => toDatetimeLocalValue(defaultRange.start));
-  const [rangeEnd, setRangeEnd] = useState(() => toDatetimeLocalValue(defaultRange.end));
+  const [rangeStart, setRangeStart] = useState(() => toDateInputValue(defaultRange.start));
+  const [rangeEnd, setRangeEnd] = useState(() => toDateInputValue(defaultRange.end));
 
   const [loadedRows, setLoadedRows] = useState<Transaction[]>([]);
   const [txLoading, setTxLoading] = useState(false);
@@ -69,8 +62,11 @@ export default function OverviewPage() {
         if (current) {
           return current;
         }
-        const first = list[0] ? branchKey(list[0]) : "";
-        return first;
+        const y = findYermiyahuBranchId(list);
+        if (y) {
+          return y;
+        }
+        return list[0] ? branchKey(list[0]) : "";
       });
     } catch (e) {
       toast.error(t("overview.toast.branchesError"), {
@@ -84,6 +80,10 @@ export default function OverviewPage() {
   useEffect(() => {
     void loadBranches();
   }, [loadBranches]);
+
+  useEffect(() => {
+    setStationId("");
+  }, [branchId]);
 
   useEffect(() => {
     if (!branchId) {
@@ -133,9 +133,9 @@ export default function OverviewPage() {
   async function fetchTransactions() {
     setTxLoading(true);
     try {
-      const start = parseDatetimeLocal(rangeStart);
-      const end = parseDatetimeLocal(rangeEnd);
-      const dates = buildDatesQueryParam(start, end);
+      const start = parseDateInput(rangeStart);
+      const end = parseDateInput(rangeEnd);
+      const dates = buildDatesQueryParamT05(start, end);
       const { data } = await apiClient.get<unknown>("/api/transactions", {
         params: { dates },
       });
@@ -225,16 +225,25 @@ export default function OverviewPage() {
               )}
             </select>
           </label>
-          <div className="flex-1 text-sm text-zinc-600 dark:text-zinc-400">
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">{t("overview.stations")}</span>
-            <p className="mt-1.5 min-h-[2.5rem] rounded-lg border border-dashed border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
-              {stations.length === 0
-                ? t("overview.noStations")
-                : stations
-                    .map((s) => String(s.name ?? s.title ?? s.stationId ?? s.id ?? "—"))
-                    .join(", ")}
-            </p>
-          </div>
+          <label className="flex-1 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            {t("overview.stationSelect")}
+            <select
+              className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+              value={stationId}
+              onChange={(e) => setStationId(e.target.value)}
+              disabled={!branchId || stations.length === 0}
+            >
+              <option value="">{t("overview.stationPlaceholder")}</option>
+              {stations.map((s, idx) => {
+                const id = stationKey(s);
+                return (
+                  <option key={id || `station-${idx}`} value={id}>
+                    {stationLabel(s)}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
         </div>
       </section>
 
@@ -244,9 +253,9 @@ export default function OverviewPage() {
         </h2>
         <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("overview.rangeStart")}
+            {t("overview.dateStart")}
             <input
-              type="datetime-local"
+              type="date"
               className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
               value={rangeStart}
               onChange={(e) => setRangeStart(e.target.value)}
@@ -254,9 +263,9 @@ export default function OverviewPage() {
             />
           </label>
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("overview.rangeEnd")}
+            {t("overview.dateEnd")}
             <input
-              type="datetime-local"
+              type="date"
               className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
               value={rangeEnd}
               onChange={(e) => setRangeEnd(e.target.value)}

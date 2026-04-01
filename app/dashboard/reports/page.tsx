@@ -1,7 +1,11 @@
 "use client";
 
 import { apiClient } from "@/lib/api-client";
-import { buildDatesQueryParam } from "@/lib/dates";
+import {
+  buildDatesQueryParamT05,
+  parseDateInput,
+  toDateInputValue,
+} from "@/lib/dates";
 import { normalizeApiArray } from "@/lib/normalize-api-array";
 import { StatusBadge } from "@/components/status-badge";
 import type { Transaction, TransactionState } from "@/types/shaarei";
@@ -19,16 +23,6 @@ const STATUS_OPTIONS: TransactionState[] = [
   "started",
   "created",
 ];
-
-function toDatetimeLocalValue(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function parseDatetimeLocal(s: string): Date {
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? new Date() : d;
-}
 
 function cellId(tx: Transaction): string {
   const id = tx.id ?? tx._id ?? tx.transactionId;
@@ -63,8 +57,8 @@ export default function StatusReportsPage() {
     return { start, end };
   }, []);
 
-  const [rangeStart, setRangeStart] = useState(() => toDatetimeLocalValue(defaultRange.start));
-  const [rangeEnd, setRangeEnd] = useState(() => toDatetimeLocalValue(defaultRange.end));
+  const [rangeStart, setRangeStart] = useState(() => toDateInputValue(defaultRange.start));
+  const [rangeEnd, setRangeEnd] = useState(() => toDateInputValue(defaultRange.end));
   const [stateFilter, setStateFilter] = useState<TransactionState>("completed");
   const [rows, setRows] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -72,9 +66,9 @@ export default function StatusReportsPage() {
   async function fetchReports() {
     setLoading(true);
     try {
-      const start = parseDatetimeLocal(rangeStart);
-      const end = parseDatetimeLocal(rangeEnd);
-      const dates = buildDatesQueryParam(start, end);
+      const start = parseDateInput(rangeStart);
+      const end = parseDateInput(rangeEnd);
+      const dates = buildDatesQueryParamT05(start, end);
       const { data } = await apiClient.get<unknown>("/api/transactions", {
         params: { dates, state: stateFilter },
       });
@@ -110,9 +104,9 @@ export default function StatusReportsPage() {
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
         <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("reports.rangeStart")}
+            {t("reports.dateStart")}
             <input
-              type="datetime-local"
+              type="date"
               className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
               value={rangeStart}
               onChange={(e) => setRangeStart(e.target.value)}
@@ -120,9 +114,9 @@ export default function StatusReportsPage() {
             />
           </label>
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("reports.rangeEnd")}
+            {t("reports.dateEnd")}
             <input
-              type="datetime-local"
+              type="date"
               className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
               value={rangeEnd}
               onChange={(e) => setRangeEnd(e.target.value)}
