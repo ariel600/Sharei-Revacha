@@ -47,7 +47,8 @@ export default function StatusReportsPage() {
 
   const [rangeStart, setRangeStart] = useState(today);
   const [rangeEnd, setRangeEnd] = useState(today);
-  const [stateFilter, setStateFilter] = useState<TransactionState>("completed");
+  /** Empty string = all statuses (do not send `state` to API). */
+  const [stateFilter, setStateFilter] = useState("");
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [branchId, setBranchId] = useState("");
@@ -148,10 +149,10 @@ export default function StatusReportsPage() {
       const start = parseDateInput(rangeStart);
       const end = parseDateInput(rangeEnd);
       const dates = buildDatesQueryParamT05(start, end);
-      const params: Record<string, string> = {
-        dates,
-        state: stateFilter,
-      };
+      const params: Record<string, string> = { dates };
+      if (stateFilter) {
+        params.state = stateFilter;
+      }
       if (branchId) {
         params.branch = branchId;
       }
@@ -169,6 +170,9 @@ export default function StatusReportsPage() {
         "results",
         "records",
       ]);
+      if (list.length > 0) {
+        console.log("FIRST TRANSACTION ROW:", list[0]);
+      }
       setRows(list);
       toast.success(t("reports.toast.loaded"), {
         description: t("reports.toast.rows", { count: list.length }),
@@ -186,7 +190,7 @@ export default function StatusReportsPage() {
   const showFilterHint = rows.length > 0 && (cardSearch.trim() !== "" || amountSearch.trim() !== "");
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div dir="rtl" className="w-full min-w-0 space-y-8 px-4 sm:px-6 lg:px-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           {t("reports.title")}
@@ -194,7 +198,7 @@ export default function StatusReportsPage() {
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t("reports.subtitle")}</p>
       </div>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40 sm:p-6">
+      <section className="w-full rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40 sm:p-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
             {t("reports.branch")}
@@ -266,8 +270,9 @@ export default function StatusReportsPage() {
             <select
               className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
               value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value as TransactionState)}
+              onChange={(e) => setStateFilter(e.target.value)}
             >
+              <option value="">{t("reports.statusAll")}</option>
               {STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>
                   {t(`status.${s}` as MessageKey)}
@@ -322,7 +327,7 @@ export default function StatusReportsPage() {
           </p>
         ) : null}
 
-        <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="mt-6 w-full overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
           {rows.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-zinc-500">{t("reports.empty")}</p>
           ) : displayRows.length === 0 ? (

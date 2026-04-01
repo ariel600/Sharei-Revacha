@@ -9,32 +9,40 @@ function asRecord(tx: unknown): Record<string, unknown> {
   return {};
 }
 
-const DATE_KEYS = [
-  "creationTime",
+/** Primary order matches external API (aggressive fallbacks after). */
+const PRIMARY_DATE_KEYS = [
+  "creationDate",
   "createdAt",
   "date",
   "timestamp",
+  "transactionTime",
+] as const;
+
+const EXTRA_DATE_KEYS = [
+  "creationTime",
   "transactionDate",
   "time",
   "created",
   "insertTime",
-  "transactionTime",
   "datetime",
   "eventTime",
 ] as const;
 
-const CARD_KEYS = [
+const PRIMARY_CARD_KEYS = [
+  "cardMask",
   "cardNumber",
   "card",
-  "maskedCard",
-  "cardMask",
   "pan",
+  "creditCard",
+] as const;
+
+const EXTRA_CARD_KEYS = [
+  "maskedCard",
   "cardLastFour",
   "lastFourDigits",
   "last4",
   "mask",
   "number",
-  "creditCard",
 ] as const;
 
 const AMOUNT_KEYS = [
@@ -72,9 +80,12 @@ function parseToDate(raw: unknown): Date | null {
 }
 
 function firstRawDate(o: Record<string, unknown>): unknown {
-  for (const k of DATE_KEYS) {
-    if (k in o && o[k] != null) {
-      return o[k];
+  for (const keys of [PRIMARY_DATE_KEYS, EXTRA_DATE_KEYS]) {
+    for (const k of keys) {
+      const v = o[k];
+      if (v !== undefined && v !== null && String(v).trim() !== "") {
+        return v;
+      }
     }
   }
   return null;
@@ -102,10 +113,12 @@ export function formatTransactionWhenIsrael(tx: unknown): string {
 
 export function resolveTransactionCard(tx: unknown): string {
   const o = asRecord(tx);
-  for (const k of CARD_KEYS) {
-    const v = o[k];
-    if (v !== undefined && v !== null && String(v).trim() !== "") {
-      return String(v);
+  for (const keys of [PRIMARY_CARD_KEYS, EXTRA_CARD_KEYS]) {
+    for (const k of keys) {
+      const v = o[k];
+      if (v !== undefined && v !== null && String(v).trim() !== "") {
+        return String(v);
+      }
     }
   }
   return "";
