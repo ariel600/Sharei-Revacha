@@ -9,31 +9,33 @@ function asRecord(tx: unknown): Record<string, unknown> {
   return {};
 }
 
-/** Primary order matches external API (aggressive fallbacks after). */
+/** Primary order: API-specific names first, then fallbacks. */
 const PRIMARY_DATE_KEYS = [
-  "creationDate",
+  "transactionDate",
+  "createDate",
   "createdAt",
+  "time",
+  "transactionTime",
+  "creationDate",
   "date",
   "timestamp",
-  "transactionTime",
 ] as const;
 
 const EXTRA_DATE_KEYS = [
   "creationTime",
-  "transactionDate",
-  "time",
+  "datetime",
   "created",
   "insertTime",
-  "datetime",
   "eventTime",
 ] as const;
 
 const PRIMARY_CARD_KEYS = [
   "cardMask",
   "cardNumber",
-  "card",
-  "pan",
   "creditCard",
+  "cc",
+  "pan",
+  "card",
 ] as const;
 
 const EXTRA_CARD_KEYS = [

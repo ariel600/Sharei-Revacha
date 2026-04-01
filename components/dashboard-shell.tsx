@@ -26,18 +26,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-full flex-1 bg-zinc-100 dark:bg-zinc-950">
+    <div className="flex min-h-screen w-full flex-1 bg-zinc-100 dark:bg-zinc-950">
       <aside
-        className={`fixed inset-y-0 start-0 z-40 w-64 transform border-e border-zinc-200 bg-white shadow-sm transition-transform dark:border-zinc-800 dark:bg-zinc-900 md:static md:translate-x-0 ${
+        className={`print:hidden fixed inset-y-0 start-0 z-40 flex w-64 flex-col border-e border-zinc-200 bg-white shadow-sm transition-transform dark:border-zinc-800 dark:bg-zinc-900 md:static md:translate-x-0 ${
           open ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"
         }`}
       >
-        <div className="flex h-16 items-center border-b border-zinc-200 px-6 dark:border-zinc-800">
+        <div className="flex h-14 shrink-0 items-center border-b border-zinc-200 px-4 dark:border-zinc-800">
           <span className="font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             {t("meta.title")}
           </span>
         </div>
-        <nav className="space-y-1 p-4">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {nav.map(({ href, label, icon: Icon }) => {
             const active =
               pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
@@ -58,46 +58,39 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+        <div className="shrink-0 space-y-2 border-t border-zinc-200 p-3 dark:border-zinc-800">
+          <LanguageSwitcher className="w-full justify-center" />
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+          >
+            <LogOut className="h-4 w-4" aria-hidden />
+            {t("dashboard.logout")}
+          </button>
+        </div>
       </aside>
 
       {open ? (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="print:hidden fixed inset-0 z-30 bg-black/40 md:hidden"
           aria-label={t("dashboard.closeMenu")}
           onClick={() => setOpen(false)}
         />
       ) : null}
 
-      <div className="flex min-h-full flex-1 flex-col md:ps-0">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-zinc-200 bg-white/90 px-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/90 md:px-8">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 md:hidden dark:text-zinc-400 dark:hover:bg-zinc-800"
-              onClick={() => setOpen(true)}
-              aria-label={t("dashboard.openMenu")}
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-              {t("dashboard.header")}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <LanguageSwitcher />
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
-            >
-              <LogOut className="h-4 w-4" aria-hidden />
-              {t("dashboard.logout")}
-            </button>
-          </div>
-        </header>
+      <button
+        type="button"
+        className="print:hidden fixed bottom-4 end-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-white shadow-lg md:hidden dark:bg-zinc-100 dark:text-zinc-900"
+        onClick={() => setOpen(true)}
+        aria-label={t("dashboard.openMenu")}
+      >
+        <Menu className="h-5 w-5" />
+      </button>
 
-        <main className="flex-1 px-4 py-8 md:px-8">{children}</main>
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col md:ps-0">
+        <main className="min-h-screen w-full min-w-0 flex-1 p-0">{children}</main>
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import {
   resolveTransactionStatus,
   transactionRowMatchesLocalSearch,
 } from "@/lib/transaction-display";
+import { TransactionReceiptModal } from "@/components/transaction-receipt-modal";
 import { StatusBadge } from "@/components/status-badge";
 import type { Branch, Station, Transaction, TransactionState } from "@/types/shaarei";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -47,7 +48,6 @@ export default function StatusReportsPage() {
 
   const [rangeStart, setRangeStart] = useState(today);
   const [rangeEnd, setRangeEnd] = useState(today);
-  /** Empty string = all statuses (do not send `state` to API). */
   const [stateFilter, setStateFilter] = useState("");
 
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -61,6 +61,8 @@ export default function StatusReportsPage() {
 
   const [cardSearch, setCardSearch] = useState("");
   const [amountSearch, setAmountSearch] = useState("");
+
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
   const loadBranches = useCallback(async () => {
     setLoadingBranches(true);
@@ -189,188 +191,226 @@ export default function StatusReportsPage() {
   const fb = t("overview.branchFallback");
   const showFilterHint = rows.length > 0 && (cardSearch.trim() !== "" || amountSearch.trim() !== "");
 
+  const firstRowKeys =
+    rows.length > 0 ? Object.keys(rows[0] as Record<string, unknown>).join(", ") : "";
+
   return (
-    <div dir="rtl" className="w-full min-w-0 space-y-8 px-4 sm:px-6 lg:px-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          {t("reports.title")}
-        </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t("reports.subtitle")}</p>
+    <>
+      <div
+        dir="rtl"
+        className="print:hidden w-full min-h-screen min-w-0 bg-gray-50 p-2 sm:p-4"
+      >
+        <div className="w-full space-y-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              {t("reports.title")}
+            </h1>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t("reports.subtitle")}</p>
+          </div>
+
+          <section className="w-full rounded-xl border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40 sm:p-4">
+            <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {t("reports.branch")}
+                <select
+                  className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={branchId}
+                  onChange={(e) => setBranchId(e.target.value)}
+                  disabled={loadingBranches || branches.length === 0}
+                >
+                  {branches.length === 0 ? (
+                    <option value="">{t("reports.noBranches")}</option>
+                  ) : (
+                    branches.map((b, idx) => {
+                      const id = branchKey(b);
+                      return (
+                        <option key={id || `b-${idx}`} value={id}>
+                          {branchOptionLabel(b, fb)}
+                        </option>
+                      );
+                    })
+                  )}
+                </select>
+              </label>
+
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {t("reports.station")}
+                <select
+                  className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={stationId}
+                  onChange={(e) => setStationId(e.target.value)}
+                  disabled={!branchId || stations.length === 0}
+                >
+                  <option value="">{t("reports.stationPlaceholder")}</option>
+                  {stations.map((s, idx) => {
+                    const id = stationKey(s);
+                    return (
+                      <option key={id || `s-${idx}`} value={id}>
+                        {stationLabel(s)}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {t("reports.dateStart")}
+                <input
+                  type="date"
+                  className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={rangeStart}
+                  onChange={(e) => setRangeStart(e.target.value)}
+                  dir="ltr"
+                />
+              </label>
+
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {t("reports.dateEnd")}
+                <input
+                  type="date"
+                  className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={rangeEnd}
+                  onChange={(e) => setRangeEnd(e.target.value)}
+                  dir="ltr"
+                />
+              </label>
+
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {t("reports.status")}
+                <select
+                  className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={stateFilter}
+                  onChange={(e) => setStateFilter(e.target.value)}
+                >
+                  <option value="">{t("reports.statusAll")}</option>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {t(`status.${s}` as MessageKey)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="flex flex-col justify-end sm:col-span-2 lg:col-span-1">
+                <button
+                  type="button"
+                  onClick={() => void fetchReports()}
+                  disabled={loading}
+                  className="inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 text-sm font-semibold text-white shadow hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  {loading ? t("reports.loading") : t("reports.loadReport")}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 grid w-full gap-3 border-t border-zinc-100 pt-4 dark:border-zinc-800 md:grid-cols-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {t("reports.searchCardLocal")}
+                <input
+                  className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={cardSearch}
+                  onChange={(e) => setCardSearch(e.target.value)}
+                  placeholder="566"
+                  dir="ltr"
+                  inputMode="numeric"
+                  autoComplete="off"
+                />
+              </label>
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {t("reports.searchAmountLocal")}
+                <input
+                  className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                  value={amountSearch}
+                  onChange={(e) => setAmountSearch(e.target.value)}
+                  placeholder="100"
+                  dir="ltr"
+                  inputMode="decimal"
+                  autoComplete="off"
+                />
+              </label>
+            </div>
+
+            {showFilterHint ? (
+              <p className="mt-3 text-xs text-zinc-500">
+                {t("reports.filteredHint", { filtered: displayRows.length, total: rows.length })}
+              </p>
+            ) : null}
+
+            {rows.length > 0 ? (
+              <div className="mb-2 mt-4 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] leading-snug text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
+                <span className="font-semibold">{t("reports.debugKeysLabel")} </span>
+                <span className="break-all font-mono" dir="ltr">
+                  {firstRowKeys}
+                </span>
+              </div>
+            ) : null}
+
+            <div className="mt-2 w-full overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+              {rows.length === 0 ? (
+                <p className="px-4 py-10 text-center text-sm text-zinc-500">{t("reports.empty")}</p>
+              ) : displayRows.length === 0 ? (
+                <p className="px-4 py-10 text-center text-sm text-zinc-500">{t("reports.emptyFilter")}</p>
+              ) : (
+                <table className="w-full min-w-[640px] text-start text-sm">
+                  <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400">
+                    <tr>
+                      <th className="px-3 py-2">{t("table.colId")}</th>
+                      <th className="px-3 py-2">{t("table.colWhen")}</th>
+                      <th className="px-3 py-2">{t("table.colCard")}</th>
+                      <th className="px-3 py-2">{t("table.colAmount")}</th>
+                      <th className="px-3 py-2">{t("table.colStatus")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {displayRows.map((tx, i) => {
+                      const id = resolveTransactionId(tx);
+                      return (
+                        <tr
+                          key={`${id}-${i}`}
+                          role="button"
+                          tabIndex={0}
+                          className="cursor-pointer transition-colors hover:bg-gray-200 dark:hover:bg-zinc-800/80"
+                          onClick={() => setSelectedTransaction(tx)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedTransaction(tx);
+                            }
+                          }}
+                        >
+                          <td className="px-3 py-2 font-mono text-xs text-zinc-700 dark:text-zinc-300">
+                            {id}
+                          </td>
+                          <td className="px-3 py-2 whitespace-nowrap text-zinc-600 dark:text-zinc-400" dir="ltr">
+                            {formatTransactionWhenIsrael(tx)}
+                          </td>
+                          <td className="px-3 py-2 font-mono text-xs" dir="ltr">
+                            {resolveTransactionCard(tx) || "—"}
+                          </td>
+                          <td className="px-3 py-2" dir="ltr">
+                            {resolveTransactionAmountDisplay(tx)}
+                          </td>
+                          <td className="px-3 py-2">
+                            <StatusBadge status={resolveTransactionStatus(tx) as TransactionState} />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
 
-      <section className="w-full rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40 sm:p-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("reports.branch")}
-            <select
-              className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-              value={branchId}
-              onChange={(e) => setBranchId(e.target.value)}
-              disabled={loadingBranches || branches.length === 0}
-            >
-              {branches.length === 0 ? (
-                <option value="">{t("reports.noBranches")}</option>
-              ) : (
-                branches.map((b, idx) => {
-                  const id = branchKey(b);
-                  return (
-                    <option key={id || `b-${idx}`} value={id}>
-                      {branchOptionLabel(b, fb)}
-                    </option>
-                  );
-                })
-              )}
-            </select>
-          </label>
-
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("reports.station")}
-            <select
-              className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-              value={stationId}
-              onChange={(e) => setStationId(e.target.value)}
-              disabled={!branchId || stations.length === 0}
-            >
-              <option value="">{t("reports.stationPlaceholder")}</option>
-              {stations.map((s, idx) => {
-                const id = stationKey(s);
-                return (
-                  <option key={id || `s-${idx}`} value={id}>
-                    {stationLabel(s)}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
-
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("reports.dateStart")}
-            <input
-              type="date"
-              className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
-              value={rangeStart}
-              onChange={(e) => setRangeStart(e.target.value)}
-              dir="ltr"
-            />
-          </label>
-
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("reports.dateEnd")}
-            <input
-              type="date"
-              className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
-              value={rangeEnd}
-              onChange={(e) => setRangeEnd(e.target.value)}
-              dir="ltr"
-            />
-          </label>
-
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("reports.status")}
-            <select
-              className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-              value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value)}
-            >
-              <option value="">{t("reports.statusAll")}</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {t(`status.${s}` as MessageKey)}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <div className="flex flex-col justify-end sm:col-span-2 lg:col-span-1">
-            <button
-              type="button"
-              onClick={() => void fetchReports()}
-              disabled={loading}
-              className="inline-flex h-[42px] items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 text-sm font-semibold text-white shadow hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-              {loading ? t("reports.loading") : t("reports.loadReport")}
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-4 border-t border-zinc-100 pt-6 dark:border-zinc-800 md:grid-cols-2">
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("reports.searchCardLocal")}
-            <input
-              className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
-              value={cardSearch}
-              onChange={(e) => setCardSearch(e.target.value)}
-              placeholder="566"
-              dir="ltr"
-              inputMode="numeric"
-              autoComplete="off"
-            />
-          </label>
-          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {t("reports.searchAmountLocal")}
-            <input
-              className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
-              value={amountSearch}
-              onChange={(e) => setAmountSearch(e.target.value)}
-              placeholder="100"
-              dir="ltr"
-              inputMode="decimal"
-              autoComplete="off"
-            />
-          </label>
-        </div>
-
-        {showFilterHint ? (
-          <p className="mt-3 text-xs text-zinc-500">
-            {t("reports.filteredHint", { filtered: displayRows.length, total: rows.length })}
-          </p>
-        ) : null}
-
-        <div className="mt-6 w-full overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          {rows.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-zinc-500">{t("reports.empty")}</p>
-          ) : displayRows.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-zinc-500">{t("reports.emptyFilter")}</p>
-          ) : (
-            <table className="min-w-full text-start text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400">
-                <tr>
-                  <th className="px-4 py-3">{t("table.colId")}</th>
-                  <th className="px-4 py-3">{t("table.colWhen")}</th>
-                  <th className="px-4 py-3">{t("table.colCard")}</th>
-                  <th className="px-4 py-3">{t("table.colAmount")}</th>
-                  <th className="px-4 py-3">{t("table.colStatus")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {displayRows.map((tx, i) => {
-                  const id = resolveTransactionId(tx);
-                  return (
-                    <tr key={`${id}-${i}`} className="hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50">
-                      <td className="px-4 py-2.5 font-mono text-xs text-zinc-700 dark:text-zinc-300">
-                        {id}
-                      </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap text-zinc-600 dark:text-zinc-400" dir="ltr">
-                        {formatTransactionWhenIsrael(tx)}
-                      </td>
-                      <td className="px-4 py-2.5 font-mono text-xs" dir="ltr">
-                        {resolveTransactionCard(tx) || "—"}
-                      </td>
-                      <td className="px-4 py-2.5" dir="ltr">
-                        {resolveTransactionAmountDisplay(tx)}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <StatusBadge status={resolveTransactionStatus(tx) as TransactionState} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </section>
-    </div>
+      {selectedTransaction ? (
+        <TransactionReceiptModal
+          transaction={selectedTransaction}
+          onClose={() => setSelectedTransaction(null)}
+        />
+      ) : null}
+    </>
   );
 }
