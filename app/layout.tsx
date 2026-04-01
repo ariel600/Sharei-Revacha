@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Heebo } from "next/font/google";
 import { AppToaster } from "@/components/app-toaster";
+import { AppVersionBadge } from "@/components/app-version-badge";
 import { DocumentLang } from "@/components/document-lang";
 import "./globals.css";
 
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col font-sans">
         <DocumentLang />
         {children}
+        <AppVersionBadge />
         <AppToaster />
       </body>
     </html>
