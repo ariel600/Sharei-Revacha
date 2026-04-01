@@ -90,7 +90,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </button>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col md:ps-0">
-        <main className="min-h-screen w-full min-w-0 flex-1 p-0">{children}</main>
+        <main className="min-h-screen min-w-0 w-full flex-1 overflow-x-hidden p-0">{children}</main>
       </div>
     </div>
   );

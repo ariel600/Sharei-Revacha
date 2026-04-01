@@ -196,21 +196,19 @@ export default function StatusReportsPage() {
 
   return (
     <>
-      <div
-        dir="rtl"
-        className="print:hidden w-full min-h-screen min-w-0 bg-gray-50 p-2 sm:p-4"
-      >
-        <div className="w-full space-y-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-              {t("reports.title")}
-            </h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t("reports.subtitle")}</p>
-          </div>
+      <div className="print:hidden box-border min-h-screen w-full overflow-x-hidden bg-gray-50">
+        <div dir="rtl" className="mx-auto w-full max-w-full px-4 pb-10 sm:px-8">
+          <div className="space-y-4 pt-2">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+                {t("reports.title")}
+              </h1>
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t("reports.subtitle")}</p>
+            </div>
 
-          <section className="w-full rounded-xl border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40 sm:p-4">
-            <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <section className="min-w-0 w-full rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40 sm:p-5">
+              <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-5">
+                <label className="min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {t("reports.branch")}
                 <select
                   className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -233,7 +231,7 @@ export default function StatusReportsPage() {
                 </select>
               </label>
 
-              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                <label className="min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {t("reports.station")}
                 <select
                   className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -253,7 +251,7 @@ export default function StatusReportsPage() {
                 </select>
               </label>
 
-              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                <label className="min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {t("reports.dateStart")}
                 <input
                   type="date"
@@ -264,7 +262,7 @@ export default function StatusReportsPage() {
                 />
               </label>
 
-              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                <label className="min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {t("reports.dateEnd")}
                 <input
                   type="date"
@@ -275,7 +273,7 @@ export default function StatusReportsPage() {
                 />
               </label>
 
-              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                <label className="min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {t("reports.status")}
                 <select
                   className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -290,22 +288,22 @@ export default function StatusReportsPage() {
                   ))}
                 </select>
               </label>
+              </div>
 
-              <div className="flex flex-col justify-end sm:col-span-2 lg:col-span-1">
+              <div className="mt-4">
                 <button
                   type="button"
                   onClick={() => void fetchReports()}
                   disabled={loading}
-                  className="inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 text-sm font-semibold text-white shadow hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+                  className="inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 text-sm font-semibold text-white shadow hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[180px] dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
                 >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                   {loading ? t("reports.loading") : t("reports.loadReport")}
                 </button>
               </div>
-            </div>
 
-            <div className="mt-4 grid w-full gap-3 border-t border-zinc-100 pt-4 dark:border-zinc-800 md:grid-cols-2">
-              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <div className="mt-6 grid grid-cols-1 gap-4 border-t border-zinc-100 pt-6 md:grid-cols-2 dark:border-zinc-800">
+              <label className="min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {t("reports.searchCardLocal")}
                 <input
                   className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -317,7 +315,7 @@ export default function StatusReportsPage() {
                   autoComplete="off"
                 />
               </label>
-              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <label className="min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {t("reports.searchAmountLocal")}
                 <input
                   className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
@@ -329,7 +327,7 @@ export default function StatusReportsPage() {
                   autoComplete="off"
                 />
               </label>
-            </div>
+              </div>
 
             {showFilterHint ? (
               <p className="mt-3 text-xs text-zinc-500">
@@ -346,13 +344,13 @@ export default function StatusReportsPage() {
               </div>
             ) : null}
 
-            <div className="mt-2 w-full overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="mt-4 w-full overflow-x-auto rounded-lg border border-gray-200 bg-white dark:border-zinc-700">
               {rows.length === 0 ? (
                 <p className="px-4 py-10 text-center text-sm text-zinc-500">{t("reports.empty")}</p>
               ) : displayRows.length === 0 ? (
                 <p className="px-4 py-10 text-center text-sm text-zinc-500">{t("reports.emptyFilter")}</p>
               ) : (
-                <table className="w-full min-w-[640px] text-start text-sm">
+                <table className="min-w-[640px] w-full max-w-none text-start text-sm">
                   <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400">
                     <tr>
                       <th className="px-3 py-2">{t("table.colId")}</th>
@@ -401,7 +399,8 @@ export default function StatusReportsPage() {
                 </table>
               )}
             </div>
-          </section>
+            </section>
+          </div>
         </div>
       </div>
 
