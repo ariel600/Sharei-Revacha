@@ -6,6 +6,7 @@ import { buildDatesQueryParam } from "@/lib/dates";
 import { normalizeApiArray } from "@/lib/normalize-api-array";
 import { TransactionTable } from "@/components/transaction-table";
 import type { Branch, Station, Transaction } from "@/types/shaarei";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Loader2, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -24,11 +25,12 @@ function branchKey(b: Branch): string {
   return String(b.id ?? b._id ?? b.branchId ?? b.code ?? "");
 }
 
-function branchLabel(b: Branch): string {
-  return String((b.name ?? b.title ?? b.code ?? branchKey(b)) || "Branch");
+function branchLabel(b: Branch, fallback: string): string {
+  return String((b.name ?? b.title ?? b.code ?? branchKey(b)) || fallback);
 }
 
 export default function OverviewPage() {
+  const { t } = useTranslation();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [branchId, setBranchId] = useState<string>("");
   const [stations, setStations] = useState<Station[]>([]);
@@ -71,13 +73,13 @@ export default function OverviewPage() {
         return first;
       });
     } catch (e) {
-      toast.error("Could not load branches", {
-        description: e instanceof Error ? e.message : "Request failed",
+      toast.error(t("overview.toast.branchesError"), {
+        description: e instanceof Error ? e.message : t("common.requestFailed"),
       });
     } finally {
       setLoadingBranches(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void loadBranches();
@@ -91,7 +93,9 @@ export default function OverviewPage() {
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await apiClient.get<unknown>(`/api/branches/${encodeURIComponent(branchId)}/stations`);
+        const { data } = await apiClient.get<unknown>(
+          `/api/branches/${encodeURIComponent(branchId)}/stations`,
+        );
         if (cancelled) {
           return;
         }
@@ -105,8 +109,8 @@ export default function OverviewPage() {
         setStations(list);
       } catch (e) {
         if (!cancelled) {
-          toast.error("Could not load stations", {
-            description: e instanceof Error ? e.message : "Request failed",
+          toast.error(t("overview.toast.stationsError"), {
+            description: e instanceof Error ? e.message : t("common.requestFailed"),
           });
           setStations([]);
         }
@@ -115,7 +119,7 @@ export default function OverviewPage() {
     return () => {
       cancelled = true;
     };
-  }, [branchId]);
+  }, [branchId, t]);
 
   const filteredRows = useMemo(
     () => applyLocalTransactionFilter(loadedRows, cardFilter, amountFilter),
@@ -143,10 +147,12 @@ export default function OverviewPage() {
         "records",
       ]);
       setLoadedRows(list);
-      toast.success("Transactions loaded", { description: `${list.length} row(s).` });
+      toast.success(t("overview.toast.txLoaded"), {
+        description: t("overview.toast.txRows", { count: list.length }),
+      });
     } catch (e) {
-      toast.error("Could not load transactions", {
-        description: e instanceof Error ? e.message : "Request failed",
+      toast.error(t("overview.toast.txError"), {
+        description: e instanceof Error ? e.message : t("common.requestFailed"),
       });
     } finally {
       setTxLoading(false);
@@ -169,35 +175,36 @@ export default function OverviewPage() {
       );
       const list = data.transactions ?? [];
       setLoadedRows(list);
-      toast.message("Deep search complete", { description: `${list.length} match(es) in the last 30 days.` });
+      toast.message(t("overview.toast.deepDone"), {
+        description: t("overview.toast.deepMatches", { count: list.length }),
+      });
     } catch (e) {
-      toast.error("Deep search failed", {
-        description: e instanceof Error ? e.message : "Request failed",
+      toast.error(t("overview.toast.deepError"), {
+        description: e instanceof Error ? e.message : t("common.requestFailed"),
       });
     } finally {
       setDeepLoading(false);
     }
   }
 
+  const fb = t("overview.branchFallback");
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Overview
+          {t("overview.title")}
         </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Select a branch, pick a date range, and load transactions. Refine locally or use deep
-          search when needed.
-        </p>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t("overview.subtitle")}</p>
       </div>
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-          Branch & stations
+          {t("overview.branchStations")}
         </h2>
         <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end">
           <label className="flex-1 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Branch
+            {t("overview.branch")}
             <select
               className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
               value={branchId}
@@ -205,13 +212,13 @@ export default function OverviewPage() {
               disabled={loadingBranches || branches.length === 0}
             >
               {branches.length === 0 ? (
-                <option value="">No branches</option>
+                <option value="">{t("overview.noBranches")}</option>
               ) : (
                 branches.map((b, idx) => {
                   const id = branchKey(b);
                   return (
                     <option key={id || `branch-${idx}`} value={id}>
-                      {branchLabel(b)}
+                      {branchLabel(b, fb)}
                     </option>
                   );
                 })
@@ -219,10 +226,10 @@ export default function OverviewPage() {
             </select>
           </label>
           <div className="flex-1 text-sm text-zinc-600 dark:text-zinc-400">
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">Stations</span>
+            <span className="font-medium text-zinc-700 dark:text-zinc-300">{t("overview.stations")}</span>
             <p className="mt-1.5 min-h-[2.5rem] rounded-lg border border-dashed border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900/50">
               {stations.length === 0
-                ? "No stations loaded."
+                ? t("overview.noStations")
                 : stations
                     .map((s) => String(s.name ?? s.title ?? s.stationId ?? s.id ?? "—"))
                     .join(", ")}
@@ -233,25 +240,27 @@ export default function OverviewPage() {
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-          Transactions
+          {t("overview.transactions")}
         </h2>
         <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Range start
+            {t("overview.rangeStart")}
             <input
               type="datetime-local"
               className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
               value={rangeStart}
               onChange={(e) => setRangeStart(e.target.value)}
+              dir="ltr"
             />
           </label>
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Range end
+            {t("overview.rangeEnd")}
             <input
               type="datetime-local"
               className="mt-1.5 block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
               value={rangeEnd}
               onChange={(e) => setRangeEnd(e.target.value)}
+              dir="ltr"
             />
           </label>
           <button
@@ -261,28 +270,30 @@ export default function OverviewPage() {
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
           >
             {txLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Fetch Data
+            {t("overview.fetchData")}
           </button>
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Search by Card Number
+            {t("overview.searchCard")}
             <input
               className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
               value={cardFilter}
               onChange={(e) => setCardFilter(e.target.value)}
-              placeholder="Partial or full card number"
+              placeholder={t("overview.placeholderCard")}
+              dir="ltr"
             />
           </label>
           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Search by Amount
+            {t("overview.searchAmount")}
             <input
               className="mt-1.5 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
               value={amountFilter}
               onChange={(e) => setAmountFilter(e.target.value)}
-              placeholder="Exact amount"
+              placeholder={t("overview.placeholderAmount")}
               inputMode="decimal"
+              dir="ltr"
             />
           </label>
         </div>
@@ -290,27 +301,29 @@ export default function OverviewPage() {
         {showDeepSearch ? (
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/40">
             <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-              Not found locally. Deep Search in Database
+              {t("overview.deepTitle")}
             </p>
-            <p className="mt-1 text-xs text-amber-800/90 dark:text-amber-200/90">
-              Searches the last 30 days on the server using your card and amount filters.
-            </p>
+            <p className="mt-1 text-xs text-amber-800/90 dark:text-amber-200/90">{t("overview.deepHint")}</p>
             <button
               type="button"
               onClick={() => void runDeepSearch()}
               disabled={deepLoading}
               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {deepLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              Run deep search
+              {deepLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+              {deepLoading ? t("overview.deepSearching") : t("overview.deepButton")}
             </button>
           </div>
         ) : null}
 
         <div className="mt-8">
           <p className="mb-2 text-xs text-zinc-500">
-            Showing {filteredRows.length} of {loadedRows.length} loaded row(s)
-            {filteredRows.length !== loadedRows.length ? " (after local filter)" : ""}.
+            {t("overview.showingRows", { filtered: filteredRows.length, total: loadedRows.length })}
+            {filteredRows.length !== loadedRows.length ? t("overview.afterFilter") : ""}.
           </p>
           <TransactionTable rows={filteredRows} />
         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/hooks/useTranslation";
 import type { Transaction } from "@/types/shaarei";
 import { StatusBadge } from "@/components/status-badge";
 
@@ -17,11 +18,6 @@ function cellAmount(tx: Transaction): string {
   return "—";
 }
 
-function cellState(tx: Transaction): string {
-  const s = tx.state ?? tx.status;
-  return s !== undefined && s !== null ? String(s) : "—";
-}
-
 function cellId(tx: Transaction): string {
   const id = tx.id ?? tx._id ?? tx.transactionId;
   return id !== undefined && id !== null ? String(id) : "—";
@@ -33,24 +29,26 @@ function cellWhen(tx: Transaction): string {
 }
 
 export function TransactionTable({ rows }: { rows: Transaction[] }) {
+  const { t } = useTranslation();
+
   if (rows.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900/40">
-        No transactions to display.
+        {t("table.empty")}
       </p>
     );
   }
 
   return (
     <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <table className="min-w-full text-left text-sm">
+      <table className="min-w-full text-start text-sm">
         <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400">
           <tr>
-            <th className="px-4 py-3">ID</th>
-            <th className="px-4 py-3">When</th>
-            <th className="px-4 py-3">Card</th>
-            <th className="px-4 py-3">Amount</th>
-            <th className="px-4 py-3">Status</th>
+            <th className="px-4 py-3">{t("table.colId")}</th>
+            <th className="px-4 py-3">{t("table.colWhen")}</th>
+            <th className="px-4 py-3">{t("table.colCard")}</th>
+            <th className="px-4 py-3">{t("table.colAmount")}</th>
+            <th className="px-4 py-3">{t("table.colStatus")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -62,8 +60,12 @@ export function TransactionTable({ rows }: { rows: Transaction[] }) {
                   {cellId(tx)}
                 </td>
                 <td className="px-4 py-2.5 text-zinc-600 dark:text-zinc-400">{cellWhen(tx)}</td>
-                <td className="px-4 py-2.5 font-mono text-xs">{cellCard(tx)}</td>
-                <td className="px-4 py-2.5">{cellAmount(tx)}</td>
+                <td className="px-4 py-2.5 font-mono text-xs" dir="ltr">
+                  {cellCard(tx)}
+                </td>
+                <td className="px-4 py-2.5" dir="ltr">
+                  {cellAmount(tx)}
+                </td>
                 <td className="px-4 py-2.5">
                   <StatusBadge status={tx.state ?? tx.status} />
                 </td>

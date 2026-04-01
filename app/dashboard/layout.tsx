@@ -3,8 +3,8 @@ import { AuthGuard } from "@/components/auth-guard";
 import { DashboardShell } from "@/components/dashboard-shell";
 
 export const metadata: Metadata = {
-  title: "Dashboard | Shaarei Revacha",
-  description: "Shaarei Revacha operations dashboard",
+  title: "לוח בקרה | שערי רווחה",
+  description: "לוח בקרה לפעילות שערי רווחה",
 };
 
 export default function DashboardLayout({

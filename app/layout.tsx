@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import { Geist, Geist_Mono, Heebo } from "next/font/google";
+import { AppToaster } from "@/components/app-toaster";
+import { DocumentLang } from "@/components/document-lang";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,9 +14,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const heebo = Heebo({
+  variable: "--font-heebo",
+  subsets: ["hebrew", "latin"],
+});
+
 export const metadata: Metadata = {
-  title: "Shaarei Revacha",
-  description: "Shaarei Revacha operations dashboard",
+  title: "שערי רווחה",
+  description: "לוח בקרה לפעילות שערי רווחה",
 };
 
 export default function RootLayout({
@@ -25,12 +31,15 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="he"
+      dir="rtl"
+      suppressHydrationWarning
+      className={`${heebo.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-full flex-col font-sans">
+        <DocumentLang />
         {children}
-        <Toaster richColors position="top-center" />
+        <AppToaster />
       </body>
     </html>
   );

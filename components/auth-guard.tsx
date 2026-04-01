@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/hooks/useTranslation";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
@@ -7,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useTranslation();
   const jwtToken = useAuthStore((s) => s.jwtToken);
   const [hydrated, setHydrated] = useState(false);
 
@@ -26,7 +28,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!hydrated) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm text-zinc-500">
-        Loading…
+        {t("auth.loading")}
       </div>
     );
   }
