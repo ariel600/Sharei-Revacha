@@ -35,9 +35,9 @@ export default function RootLayout({
       lang="he"
       dir="rtl"
       suppressHydrationWarning
-      className={`${heebo.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${heebo.variable} ${geistSans.variable} ${geistMono.variable} h-full overflow-x-hidden antialiased`}
     >
-      <body className="flex min-h-full flex-col font-sans">
+      <body className="box-border flex min-h-screen w-full max-w-full flex-col overflow-x-hidden font-sans">
         <DocumentLang />
         {children}
         <AppVersionBadge />

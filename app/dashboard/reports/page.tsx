@@ -193,9 +193,9 @@ export default function StatusReportsPage() {
 
   return (
     <>
-      <div className="print:hidden box-border min-h-screen w-full overflow-x-hidden bg-gray-50">
-        <div dir="rtl" className="mx-auto w-full max-w-full px-4 pb-10 sm:px-8">
-          <div className="space-y-4 pt-2">
+      <div className="print:hidden w-full min-w-0">
+        <div dir="rtl" className="w-full">
+          <div className="space-y-4 pb-10 pt-2">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
                 {t("reports.title")}

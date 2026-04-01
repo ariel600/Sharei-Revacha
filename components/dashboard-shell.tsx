@@ -26,9 +26,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-1 bg-zinc-100 dark:bg-zinc-950">
+    <div className="flex min-h-screen w-full min-w-0 flex-1 flex-row overflow-x-hidden bg-zinc-100 dark:bg-zinc-950">
       <aside
-        className={`print:hidden fixed inset-y-0 start-0 z-40 flex w-64 flex-col border-e border-zinc-200 bg-white shadow-sm transition-transform dark:border-zinc-800 dark:bg-zinc-900 md:static md:translate-x-0 ${
+        className={`print:hidden fixed inset-y-0 start-0 z-40 flex w-64 shrink-0 flex-col border-e border-zinc-200 bg-white shadow-sm transition-transform dark:border-zinc-800 dark:bg-zinc-900 md:static md:translate-x-0 ${
           open ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"
         }`}
       >
@@ -89,8 +89,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <Menu className="h-5 w-5" />
       </button>
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col md:ps-0">
-        <main className="min-h-screen min-w-0 w-full flex-1 overflow-x-hidden p-0">{children}</main>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
+        <main className="min-h-0 w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8 dark:bg-zinc-950">
+          {children}
+        </main>
       </div>
     </div>
   );

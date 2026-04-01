@@ -190,7 +190,7 @@ export default function OverviewPage() {
   const fb = t("overview.branchFallback");
 
   return (
-    <div dir="rtl" className="w-full min-h-screen min-w-0 space-y-8 bg-gray-50 p-2 sm:p-4">
+    <div dir="rtl" className="w-full min-w-0 space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           {t("overview.title")}
