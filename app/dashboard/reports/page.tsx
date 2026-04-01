@@ -191,9 +191,6 @@ export default function StatusReportsPage() {
   const fb = t("overview.branchFallback");
   const showFilterHint = rows.length > 0 && (cardSearch.trim() !== "" || amountSearch.trim() !== "");
 
-  const firstRowKeys =
-    rows.length > 0 ? Object.keys(rows[0] as Record<string, unknown>).join(", ") : "";
-
   return (
     <>
       <div className="print:hidden box-border min-h-screen w-full overflow-x-hidden bg-gray-50">
@@ -206,8 +203,8 @@ export default function StatusReportsPage() {
               <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t("reports.subtitle")}</p>
             </div>
 
-            <section className="min-w-0 w-full rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40 sm:p-5">
-              <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <section className="min-w-0 w-full rounded-xl bg-white p-4 shadow-md sm:p-6 dark:bg-zinc-900/40">
+              <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <label className="min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {t("reports.branch")}
                 <select
@@ -288,21 +285,19 @@ export default function StatusReportsPage() {
                   ))}
                 </select>
               </label>
-              </div>
 
-              <div className="mt-4">
                 <button
                   type="button"
                   onClick={() => void fetchReports()}
                   disabled={loading}
-                  className="inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 text-sm font-semibold text-white shadow hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[180px] dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+                  className="col-span-1 inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 text-sm font-semibold text-white shadow hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2 lg:col-span-1 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
                 >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                   {loading ? t("reports.loading") : t("reports.loadReport")}
                 </button>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 gap-4 border-t border-zinc-100 pt-6 md:grid-cols-2 dark:border-zinc-800">
+              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
               <label className="min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {t("reports.searchCardLocal")}
                 <input
@@ -336,28 +331,30 @@ export default function StatusReportsPage() {
             ) : null}
 
             {rows.length > 0 ? (
-              <div className="mb-2 mt-4 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] leading-snug text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
-                <span className="font-semibold">{t("reports.debugKeysLabel")} </span>
-                <span className="break-all font-mono" dir="ltr">
-                  {firstRowKeys}
-                </span>
+              <div
+                className="mb-4 mt-4 overflow-auto rounded bg-yellow-100 p-4 text-left font-mono text-sm text-yellow-800"
+                dir="ltr"
+              >
+                <pre className="m-0 whitespace-pre">
+                  {JSON.stringify(rows[0] as Record<string, unknown>, null, 2)}
+                </pre>
               </div>
             ) : null}
 
-            <div className="mt-4 w-full overflow-x-auto rounded-lg border border-gray-200 bg-white dark:border-zinc-700">
+            <div className="mt-4 w-full overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
               {rows.length === 0 ? (
                 <p className="px-4 py-10 text-center text-sm text-zinc-500">{t("reports.empty")}</p>
               ) : displayRows.length === 0 ? (
                 <p className="px-4 py-10 text-center text-sm text-zinc-500">{t("reports.emptyFilter")}</p>
               ) : (
-                <table className="min-w-[640px] w-full max-w-none text-start text-sm">
+                <table className="w-full min-w-[640px] max-w-none text-start text-sm">
                   <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400">
                     <tr>
-                      <th className="px-3 py-2">{t("table.colId")}</th>
-                      <th className="px-3 py-2">{t("table.colWhen")}</th>
-                      <th className="px-3 py-2">{t("table.colCard")}</th>
-                      <th className="px-3 py-2">{t("table.colAmount")}</th>
-                      <th className="px-3 py-2">{t("table.colStatus")}</th>
+                      <th className="whitespace-nowrap px-3 py-2">{t("table.colId")}</th>
+                      <th className="whitespace-nowrap px-3 py-2">{t("table.colWhen")}</th>
+                      <th className="whitespace-nowrap px-3 py-2">{t("table.colCard")}</th>
+                      <th className="whitespace-nowrap px-3 py-2">{t("table.colAmount")}</th>
+                      <th className="whitespace-nowrap px-3 py-2">{t("table.colStatus")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -377,19 +374,19 @@ export default function StatusReportsPage() {
                             }
                           }}
                         >
-                          <td className="px-3 py-2 font-mono text-xs text-zinc-700 dark:text-zinc-300">
+                          <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-zinc-700 dark:text-zinc-300">
                             {id}
                           </td>
-                          <td className="px-3 py-2 whitespace-nowrap text-zinc-600 dark:text-zinc-400" dir="ltr">
+                          <td className="whitespace-nowrap px-3 py-2 text-zinc-600 dark:text-zinc-400" dir="ltr">
                             {formatTransactionWhenIsrael(tx)}
                           </td>
-                          <td className="px-3 py-2 font-mono text-xs" dir="ltr">
+                          <td className="whitespace-nowrap px-3 py-2 font-mono text-xs" dir="ltr">
                             {resolveTransactionCard(tx) || "—"}
                           </td>
-                          <td className="px-3 py-2" dir="ltr">
+                          <td className="whitespace-nowrap px-3 py-2" dir="ltr">
                             {resolveTransactionAmountDisplay(tx)}
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="whitespace-nowrap px-3 py-2">
                             <StatusBadge status={resolveTransactionStatus(tx) as TransactionState} />
                           </td>
                         </tr>
